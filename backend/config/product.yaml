@@ -1,0 +1,16 @@
+products:
+  - id: 3
+    amount: 1000
+    credits: 100
+    subject: "100 Credits - Starter Plan"
+    product_code: "FAST_INSTANT_TRADE_PAY"
+  - id: 4
+    amount: 5000
+    credits: 500
+    subject: "500 Credits - Pro Plan"
+    product_code: "FAST_INSTANT_TRADE_PAY"
+  - id: 5
+    amount: 10000
+    credits: 1000
+    subject: "1000 Credits - Enterprise Plan"
+    product_code: "FAST_INSTANT_TRADE_PAY"

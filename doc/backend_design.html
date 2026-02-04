@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.31">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>backend_design</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="backend_design_files/libs/clipboard/clipboard.min.js"></script>
+<script src="backend_design_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="backend_design_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="backend_design_files/libs/quarto-html/popper.min.js"></script>
+<script src="backend_design_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="backend_design_files/libs/quarto-html/anchor.min.js"></script>
+<link href="backend_design_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="backend_design_files/libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="backend_design_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="backend_design_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="backend_design_files/libs/bootstrap/bootstrap-81267100e462c21b3d6c0d5bf76a3417.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+
+<section id="后端技术方案设计-backend-technical-design" class="level1">
+<h1>后端技术方案设计 (Backend Technical Design)</h1>
+<section id="技术栈-tech-stack" class="level2">
+<h2 class="anchored" data-anchor-id="技术栈-tech-stack">1. 技术栈 (Tech Stack)</h2>
+<ul>
+<li><strong>Language</strong>: Go 1.21+</li>
+<li><strong>Framework</strong>: Gin (Web Framework)</li>
+<li><strong>Database</strong>: MySQL 8.0 (Storage)</li>
+<li><strong>ORM</strong>: GORM (Data Access)</li>
+<li><strong>Authentication</strong>: JWT (JSON Web Tokens)</li>
+<li><strong>Configuration</strong>: Viper (Optional, or standard <code>os.Getenv</code>)</li>
+</ul>
+</section>
+<section id="系统架构-system-architecture" class="level2">
+<h2 class="anchored" data-anchor-id="系统架构-system-architecture">2. 系统架构 (System Architecture)</h2>
+<p>采用标准的分层架构 (Layered Architecture)，确保职责分离。</p>
+<pre><code>backend/
+├── config/         # 配置管理 (DB连接串, API Key等)
+├── controllers/    # 控制器层：处理HTTP请求，参数校验，响应格式化
+├── services/       # 服务层：核心业务逻辑，事务控制
+├── models/         # 模型层：数据库表结构定义 (GORM structs)
+├── routes/         # 路由层：定义API路径与Handler的映射
+├── middleware/     # 中间件：JWT认证, CORS, 请求日志, 错误处理
+├── utils/          # 工具类：加密, Token生成, 通用响应封装
+└── main.go         # 程序入口</code></pre>
+</section>
+<section id="数据库设计-database-schema" class="level2">
+<h2 class="anchored" data-anchor-id="数据库设计-database-schema">3. 数据库设计 (Database Schema)</h2>
+<section id="用户基础表-user" class="level3">
+<h3 class="anchored" data-anchor-id="用户基础表-user">3.1 用户基础表 (user)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>id</td>
+<td>bigint unsigned</td>
+<td>Primary Key, Auto Increment</td>
+</tr>
+<tr class="even">
+<td>email</td>
+<td>varchar(64)</td>
+<td>Unique, Index</td>
+</tr>
+<tr class="odd">
+<td>provider</td>
+<td>varchar(16)</td>
+<td>注册来源 (email, google)</td>
+</tr>
+<tr class="even">
+<td>status</td>
+<td>varchar(16)</td>
+<td>enabled, disabled</td>
+</tr>
+<tr class="odd">
+<td>created_at</td>
+<td>timestamp</td>
+<td>创建时间</td>
+</tr>
+<tr class="even">
+<td>updated_at</td>
+<td>timestamp</td>
+<td>更新时间</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="用户凭证表-user_credential" class="level3">
+<h3 class="anchored" data-anchor-id="用户凭证表-user_credential">3.2 用户凭证表 (user_credential)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>id</td>
+<td>bigint unsigned</td>
+<td>Primary Key, Auto Increment</td>
+</tr>
+<tr class="even">
+<td>user_id</td>
+<td>bigint unsigned</td>
+<td>FK -&gt; user.id</td>
+</tr>
+<tr class="odd">
+<td>password</td>
+<td>varchar(32)</td>
+<td>Encrypted Password</td>
+</tr>
+<tr class="even">
+<td>created_at</td>
+<td>timestamp</td>
+<td>创建时间</td>
+</tr>
+<tr class="odd">
+<td>updated_at</td>
+<td>timestamp</td>
+<td>更新时间</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="用户余额表-user_balance" class="level3">
+<h3 class="anchored" data-anchor-id="用户余额表-user_balance">3.3 用户余额表 (user_balance)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>id</td>
+<td>bigint unsigned</td>
+<td>Primary Key, Auto Increment</td>
+</tr>
+<tr class="even">
+<td>user_id</td>
+<td>bigint unsigned</td>
+<td>FK -&gt; user.id</td>
+</tr>
+<tr class="odd">
+<td>balance</td>
+<td>bigint</td>
+<td>剩余点数 (Credits)</td>
+</tr>
+<tr class="even">
+<td>created_at</td>
+<td>timestamp</td>
+<td>创建时间</td>
+</tr>
+<tr class="odd">
+<td>updated_at</td>
+<td>timestamp</td>
+<td>更新时间</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="海报生成记录表-poster" class="level3">
+<h3 class="anchored" data-anchor-id="海报生成记录表-poster">3.4 海报生成记录表 (poster)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>id</td>
+<td>bigint unsigned</td>
+<td>Primary Key, Auto Increment</td>
+</tr>
+<tr class="even">
+<td>user_id</td>
+<td>bigint unsigned</td>
+<td>FK -&gt; user.id</td>
+</tr>
+<tr class="odd">
+<td>prompt</td>
+<td>json</td>
+<td>用户输入信息 (包含prompt, style等所有参数)</td>
+</tr>
+<tr class="even">
+<td>status</td>
+<td>varchar(16)</td>
+<td>pending, processing, completed, failed</td>
+</tr>
+<tr class="odd">
+<td>image_url</td>
+<td>varchar(256)</td>
+<td>生成结果URL (OSS/S3地址)</td>
+</tr>
+<tr class="even">
+<td>cost</td>
+<td>bigint</td>
+<td>消耗额度 (Credits)</td>
+</tr>
+<tr class="odd">
+<td>created_at</td>
+<td>timestamp</td>
+<td>创建时间</td>
+</tr>
+<tr class="even">
+<td>updated_at</td>
+<td>timestamp</td>
+<td>更新时间</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="充值订单表-order" class="level3">
+<h3 class="anchored" data-anchor-id="充值订单表-order">3.5 充值订单表 (order)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>id</td>
+<td>bigint unsigned</td>
+<td>Primary Key, Auto Increment</td>
+</tr>
+<tr class="even">
+<td>order_id</td>
+<td>varchar(32)</td>
+<td>业务订单号 (Unique)</td>
+</tr>
+<tr class="odd">
+<td>user_id</td>
+<td>bigint unsigned</td>
+<td>FK -&gt; user.id</td>
+</tr>
+<tr class="even">
+<td>amount</td>
+<td>bigint</td>
+<td>充值金额 (人民币分)</td>
+</tr>
+<tr class="odd">
+<td>credits</td>
+<td>bigint</td>
+<td>对应增加的额度 (Credits)</td>
+</tr>
+<tr class="even">
+<td>payment_method</td>
+<td>varchar(16)</td>
+<td>alipay, wechat</td>
+</tr>
+<tr class="odd">
+<td>status</td>
+<td>varchar(16)</td>
+<td>pending, paid, cancelled</td>
+</tr>
+<tr class="even">
+<td>created_at</td>
+<td>timestamp</td>
+<td>创建时间</td>
+</tr>
+<tr class="odd">
+<td>updated_at</td>
+<td>timestamp</td>
+<td>更新时间</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="交易流水表-transaction" class="level3">
+<h3 class="anchored" data-anchor-id="交易流水表-transaction">3.6 交易流水表 (transaction)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>id</td>
+<td>bigint unsigned</td>
+<td>Primary Key, Auto Increment</td>
+</tr>
+<tr class="even">
+<td>user_id</td>
+<td>bigint unsigned</td>
+<td>FK -&gt; user.id</td>
+</tr>
+<tr class="odd">
+<td>type</td>
+<td>varchar(16)</td>
+<td>recharge (充值), consume (消费)</td>
+</tr>
+<tr class="even">
+<td>amount</td>
+<td>bigint</td>
+<td>变动额度 (+/- Credits)</td>
+</tr>
+<tr class="odd">
+<td>reference_id</td>
+<td>bigint unsigned</td>
+<td>关联ID (Order表 ID 或 Poster表 ID)</td>
+</tr>
+<tr class="even">
+<td>created_at</td>
+<td>timestamp</td>
+<td>创建时间</td>
+</tr>
+<tr class="odd">
+<td>updated_at</td>
+<td>timestamp</td>
+<td>更新时间</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="核心接口设计-core-api-design" class="level2">
+<h2 class="anchored" data-anchor-id="核心接口设计-core-api-design">4. 核心接口设计 (Core API Design)</h2>
+<section id="用户模块-auth" class="level3">
+<h3 class="anchored" data-anchor-id="用户模块-auth">4.1 用户模块 (Auth)</h3>
+<ul>
+<li><code>POST /api/v1/auth/register</code> - 邮箱注册</li>
+<li><code>POST /api/v1/auth/login</code> - 邮箱登录</li>
+<li><code>POST /api/v1/auth/google</code> - Google OAuth登录</li>
+<li><code>POST /api/v1/auth/password/reset</code> - 密码重置</li>
+</ul>
+</section>
+<section id="海报模块-poster" class="level3">
+<h3 class="anchored" data-anchor-id="海报模块-poster">4.2 海报模块 (Poster)</h3>
+<ul>
+<li><code>POST /api/v1/posters/generate</code> - 提交生成任务</li>
+<li><code>GET /api/v1/posters</code> - 获取生成历史列表</li>
+<li><code>GET /api/v1/posters/:id</code> - 获取单张详情</li>
+</ul>
+</section>
+<section id="支付与账户-payment-account" class="level3">
+<h3 class="anchored" data-anchor-id="支付与账户-payment-account">4.3 支付与账户 (Payment &amp; Account)</h3>
+<ul>
+<li><code>GET /api/v1/account/balance</code> - 查询余额</li>
+<li><code>POST /api/v1/payment/charge</code> - 创建充值订单</li>
+<li><code>POST /api/v1/payment/callback/:method</code> - 支付回调 (支付宝/微信)</li>
+<li><code>GET /api/v1/transactions</code> - 查询交易流水</li>
+</ul>
+</section>
+</section>
+<section id="关键业务流程-key-business-flows" class="level2">
+<h2 class="anchored" data-anchor-id="关键业务流程-key-business-flows">5. 关键业务流程 (Key Business Flows)</h2>
+<section id="支付流程-state-machine" class="level3">
+<h3 class="anchored" data-anchor-id="支付流程-state-machine">5.1 支付流程 (State Machine)</h3>
+<ol type="1">
+<li>用户发起充值 -&gt; 创建 Order (Status: <code>pending</code>)</li>
+<li>调用支付接口 -&gt; 返回支付链接/二维码</li>
+<li>用户支付成功 -&gt; 支付平台回调</li>
+<li><strong>事务处理</strong>:
+<ul>
+<li>验证签名与金额</li>
+<li>更新 Order Status -&gt; <code>paid</code></li>
+<li>更新 User Balance (<code>balance</code> + <code>credits</code>)</li>
+<li>插入 Transaction 记录 (<code>type</code>: <code>recharge</code>)</li>
+</ul></li>
+<li>返回响应</li>
+</ol>
+</section>
+<section id="海报生成流程" class="level3">
+<h3 class="anchored" data-anchor-id="海报生成流程">5.2 海报生成流程</h3>
+<ol type="1">
+<li>用户请求生成 -&gt; Controller 校验参数</li>
+<li>Service 检查余额 -&gt; 余额不足返回错误</li>
+<li><strong>事务处理 (预扣费模式)</strong>:
+<ul>
+<li>扣除 User Balance</li>
+<li>插入 Transaction (<code>type</code>: <code>consume</code>)</li>
+<li>创建 Poster 记录 (<code>status</code>: <code>processing</code>)</li>
+</ul></li>
+<li>异步调用 AI API (Midjourney/StableDiffusion)</li>
+<li><strong>回调/轮询处理</strong>:
+<ul>
+<li>成功: 更新 Poster (<code>status</code>: <code>completed</code>, <code>image_url</code>: url)</li>
+<li>失败: 更新 Poster (<code>status</code>: <code>failed</code>), <strong>回滚余额</strong> (插入退款 Transaction)</li>
+</ul></li>
+</ol>
+</section>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

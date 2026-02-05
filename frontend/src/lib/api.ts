@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '@/store/useAuthStore';
 
 // Use environment variable for API URL, fallback to local default
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
@@ -10,6 +11,12 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Helper function to check if we're on an auth page
+const isAuthPage = () => {
+  const path = window.location.pathname;
+  return path === '/login' || path === '/register' || path.startsWith('/password');
+};
 
 // Request interceptor to add token
 api.interceptors.request.use(
@@ -31,7 +38,12 @@ api.interceptors.response.use(
     // Check for business logic 401 (if backend returns 200 OK but code 401)
     if (response.data && response.data.code === 401) {
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      // Clear user from store
+      useAuthStore.getState().logout();
+      // Only redirect if not already on auth page to avoid infinite loop
+      if (!isAuthPage()) {
+        window.location.href = '/login';
+      }
       return Promise.reject(new Error(response.data.message || 'Unauthorized'));
     }
     return response.data;
@@ -40,8 +52,12 @@ api.interceptors.response.use(
     // Handle 401 Unauthorized (HTTP 401)
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('token');
-      // Redirect to login
-      window.location.href = '/login';
+      // Clear user from store
+      useAuthStore.getState().logout();
+      // Only redirect if not already on auth page to avoid infinite loop
+      if (!isAuthPage()) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

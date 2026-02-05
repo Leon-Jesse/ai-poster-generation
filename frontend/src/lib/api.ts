@@ -6,7 +6,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  // 默认超时时间：60 秒，避免生成图片这种长耗时请求过早超时
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
   },

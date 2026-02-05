@@ -6,7 +6,7 @@ import { useEffect } from "react"
 import { paymentService } from "@/services/paymentService"
 
 export default function Navbar() {
-  const { user, logout, setUser } = useAuthStore()
+  const { user, logout, fetchUser } = useAuthStore()
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -17,24 +17,9 @@ export default function Navbar() {
       return;
     }
 
-    // Refresh balance when location changes (e.g. after payment success) or on mount if user exists
+    // Refresh user info (including balance and free trials) when location changes or on mount if user exists
     if (user) {
-      const fetchBalance = async () => {
-        try {
-          const res = await paymentService.getBalance();
-          if (res.code === 0) {
-             // Update user object with new balance
-             // We need to be careful not to overwrite other user data if getBalance only returns balance
-             // But here we are just updating the local store state.
-             // Ideally, we should update the auth store.
-             // Let's assume user object in store can hold balance.
-             setUser({ ...user, balance: res.data.balance });
-          }
-        } catch (error) {
-          console.error("Failed to fetch balance", error);
-        }
-      }
-      fetchBalance();
+      fetchUser();
     }
   }, [location.pathname, user?.ID]); // Dependency on pathname to refresh on navigation
 

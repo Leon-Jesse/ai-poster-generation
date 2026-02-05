@@ -13,17 +13,18 @@ type UserController struct {
 func (ctrl *UserController) GetMe(c *gin.Context) {
 	userID, _ := c.Get("userID")
 	
-	user, balance, err := ctrl.Service.GetUserProfile(userID.(uint))
+	user, balance, remainingFreeTrials, err := ctrl.Service.GetUserProfile(userID.(uint))
 	if err != nil {
 		utils.Error(c, 404, err.Error())
 		return
 	}
 
 	utils.Success(c, gin.H{
-		"id":         user.ID,
-		"email":      user.Email,
-		"provider":   user.Provider,
-		"created_at": user.CreatedAt,
-		"balance":    balance,
+		"id":                  user.ID,
+		"email":               user.Email,
+		"provider":            user.Provider,
+		"created_at":          user.CreatedAt,
+		"balance":             balance,
+		"remaining_free_trials": remainingFreeTrials,
 	})
 }

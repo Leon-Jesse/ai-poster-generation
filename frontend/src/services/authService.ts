@@ -5,6 +5,7 @@ export interface User {
   status: string;
   created_at: string;
   balance?: number; // Added balance
+  remaining_free_trials?: number; // 剩余免费试用次数
 }
 
 export interface AuthResponse {
@@ -13,6 +14,13 @@ export interface AuthResponse {
   data: {
     user?: User;
     token?: string;
+    // GetMe API 返回的字段
+    id?: number;
+    email?: string;
+    provider?: string;
+    created_at?: string;
+    balance?: number;
+    remaining_free_trials?: number;
   };
 }
 

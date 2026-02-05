@@ -39,8 +39,17 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         try {
           const res = await authService.getMe();
-          if (res.code === 0 && res.data.user) {
-            set({ user: res.data.user, error: null });
+          if (res.code === 0 && res.data) {
+            // GetMe API 直接返回用户信息，不是嵌套在 user 字段中
+            const userData: User = {
+              ID: res.data.id || res.data.user?.ID || 0,
+              email: res.data.email || res.data.user?.email || '',
+              status: res.data.user?.status || 'enabled',
+              created_at: res.data.created_at || res.data.user?.created_at || '',
+              balance: res.data.balance ?? res.data.user?.balance,
+              remaining_free_trials: res.data.remaining_free_trials ?? res.data.user?.remaining_free_trials,
+            };
+            set({ user: userData, error: null });
           } else {
             // If fetching user fails, maybe token is invalid
             set({ error: res.message });

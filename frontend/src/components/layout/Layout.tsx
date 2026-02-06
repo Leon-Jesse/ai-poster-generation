@@ -24,7 +24,7 @@ export default function Layout() {
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             {/* Left: Copyright */}
             <p className="text-sm text-slate-300">
-              © 2026 CoverMagic
+              © 2026 CoverDesigner
             </p>
             
             {/* Right: Links */}

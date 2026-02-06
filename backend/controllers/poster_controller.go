@@ -129,9 +129,27 @@ func (ctrl *PosterController) List(c *gin.Context) {
 		return
 	}
 
+	// Parse prompt JSON for each poster
+	items := make([]gin.H, len(posters))
+	for i, poster := range posters {
+		var promptObj interface{}
+		_ = json.Unmarshal([]byte(poster.Prompt), &promptObj)
+		
+		items[i] = gin.H{
+			"id":         poster.ID,
+			"user_id":    poster.UserID,
+			"status":     poster.Status,
+			"image_url":  poster.ImageURL,
+			"cost":       poster.Cost,
+			"prompt":     promptObj,
+			"created_at": poster.CreatedAt,
+			"updated_at": poster.UpdatedAt,
+		}
+	}
+
 	utils.Success(c, gin.H{
 		"total": total,
-		"items": posters,
+		"items": items,
 	})
 }
 
@@ -147,4 +165,40 @@ func (ctrl *PosterController) GetDetail(c *gin.Context) {
 	}
 
 	utils.Success(c, poster)
+}
+
+// GetAllHistory returns all consumption history (all statuses)
+func (ctrl *PosterController) GetAllHistory(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+
+	posters, total, err := ctrl.Service.GetAllPosters(userID.(uint), page, pageSize)
+	if err != nil {
+		utils.Error(c, 500, err.Error())
+		return
+	}
+
+	// Parse prompt JSON for each poster
+	items := make([]gin.H, len(posters))
+	for i, poster := range posters {
+		var promptObj interface{}
+		_ = json.Unmarshal([]byte(poster.Prompt), &promptObj)
+		
+		items[i] = gin.H{
+			"id":         poster.ID,
+			"user_id":    poster.UserID,
+			"status":     poster.Status,
+			"image_url":  poster.ImageURL,
+			"cost":       poster.Cost,
+			"prompt":     promptObj,
+			"created_at": poster.CreatedAt,
+			"updated_at": poster.UpdatedAt,
+		}
+	}
+
+	utils.Success(c, gin.H{
+		"total": total,
+		"items": items,
+	})
 }

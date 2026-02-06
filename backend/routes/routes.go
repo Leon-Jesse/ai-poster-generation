@@ -56,6 +56,7 @@ func SetupRouter() *gin.Engine {
 			// Poster
 			protected.POST("/posters/generate", posterCtrl.Generate)
 			protected.GET("/posters", posterCtrl.List)
+			protected.GET("/posters/history", posterCtrl.GetAllHistory)
 			protected.GET("/posters/:id", posterCtrl.GetDetail)
 
 			// Payment

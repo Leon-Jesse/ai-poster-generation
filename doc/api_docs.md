@@ -1,6 +1,6 @@
-# CoverMagic 后端接口文档 (API Documentation)
+# CoverDesigner 后端接口文档 (API Documentation)
 
-本文档定义了 CoverMagic 系统的后端 API 接口。
+本文档定义了 CoverDesigner 系统的后端 API 接口。
 
 ## 1. 通用说明 (General)
 

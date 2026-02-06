@@ -175,6 +175,23 @@ func (s *PosterService) GetPosters(userID uint, page, pageSize int) ([]models.Po
 
 	offset := (page - 1) * pageSize
 
+	// Only get completed posters with valid image URLs
+	db := models.DB.Model(&models.Poster{}).
+		Where("user_id = ? AND status = ? AND image_url != '' AND image_url IS NOT NULL", userID, "completed")
+	db.Count(&total)
+
+	err := db.Order("created_at desc").Offset(offset).Limit(pageSize).Find(&posters).Error
+	return posters, total, err
+}
+
+// GetAllPosters gets all posters (for consumption history) regardless of status
+func (s *PosterService) GetAllPosters(userID uint, page, pageSize int) ([]models.Poster, int64, error) {
+	var posters []models.Poster
+	var total int64
+
+	offset := (page - 1) * pageSize
+
+	// Get all posters regardless of status (for consumption history)
 	db := models.DB.Model(&models.Poster{}).Where("user_id = ?", userID)
 	db.Count(&total)
 

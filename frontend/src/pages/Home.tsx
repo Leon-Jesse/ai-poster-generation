@@ -212,14 +212,11 @@ export default function Home() {
     <div className="min-h-[calc(100vh-3.5rem)] bg-[#050816] text-white">
       <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 pb-16 pt-10 lg:px-0 lg:pb-24 lg:pt-16">
         {/* Logo & hero copy */}
-        <header className="text-center space-y-4">
+        <header className="text-center space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full bg-[#101828]/80 px-4 py-1 text-xs font-medium text-slate-300 border border-white/10">
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             即刻生成高点击率爆款封面图
           </div>
-          <h1 className="bg-gradient-to-r from-[#7dd3fc] via-[#c4b5fd] to-[#f9a8d4] bg-clip-text text-4xl font-extrabold tracking-[0.3em] text-transparent sm:text-5xl lg:text-[56px]">
-            COVERMAGIC
-          </h1>
           <p className="text-sm text-slate-300 sm:text-base">
             免费试用：<span className="font-semibold text-emerald-400">
               {user?.remaining_free_trials ?? 0}/3

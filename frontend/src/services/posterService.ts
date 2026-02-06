@@ -42,11 +42,23 @@ export const posterService = {
 
   list: async (page: number = 1, pageSize: number = 20) => {
     return api.get<any, ApiResponse<{ total: number; items: Poster[] }>>('/posters', {
-      params: { page, page_size: pageSize },
+      params: { 
+        page: page.toString(), 
+        page_size: pageSize.toString() 
+      },
     });
   },
 
   getDetail: async (id: number) => {
     return api.get<any, ApiResponse<Poster>>(`/posters/${id}`);
+  },
+
+  getHistory: async (page: number = 1, pageSize: number = 20) => {
+    return api.get<any, ApiResponse<{ total: number; items: Poster[] }>>('/posters/history', {
+      params: { 
+        page: page.toString(), 
+        page_size: pageSize.toString() 
+      },
+    });
   },
 };

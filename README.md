@@ -60,7 +60,7 @@ CoverDesigner 是一个基于 **Go 后端 + React/Vite 前端** 的 AI 海报封
     utils/         # 工具与日志（zap logger 等）
 
   frontend/        # 前端（React + Vite + TypeScript）
-    index.html     # 前端入口 HTML（标题已改为 CoverDesigner）
+    index.html     # 前端入口 HTML
     src/
       App.tsx                  # 路由配置（Home / Workspace / History / Pricing / Settings）
       main.tsx                 # React 应用入口
@@ -84,7 +84,7 @@ CoverDesigner 是一个基于 **Go 后端 + React/Vite 前端** 的 AI 海报封
         images/                # 示例图片（YouTube / 小红书/经典 等）
 
   doc/
-    api_docs.md    # 后端 API 文档（品牌名已更新为 CoverDesigner）
+    docker-compose.yml     # mysql 容器化部署配置
     schema.sql     # 数据库 schema 参考
 ```
 
@@ -252,7 +252,7 @@ frontend/.env
 
 ### 6. 服务启动流程
 
-以下命令请在 `auradraw` 目录下执行（或根据你的实际项目根目录调整）：
+以下命令请在 `ai_poster_generation` 目录下执行（或根据你的实际项目根目录调整）：
 
 #### 6.1 启动 MySQL 数据库
 

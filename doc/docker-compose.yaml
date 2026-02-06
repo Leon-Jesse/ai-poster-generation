@@ -7,7 +7,7 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme_in_production}
+      MYSQL_ROOT_PASSWORD: root123456
       MYSQL_INITDB_CHARSET: utf8mb4
       MYSQL_INITDB_COLLATION: utf8mb4_unicode_ci
     volumes:

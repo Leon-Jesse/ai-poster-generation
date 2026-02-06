@@ -1,25 +1,25 @@
 templates:
   register:
-    subject: "欢迎注册 AuraDraw - 验证码"
+    subject: "欢迎注册 CoverDesigner - 验证码"
     body: |
       <div style="font-family: Arial, sans-serif; padding: 20px;">
-        <h2>欢迎来到 AuraDraw!</h2>
+        <h2>欢迎来到 CoverDesigner!</h2>
         <p>您正在注册 AuraDraw 账号，您的验证码是：</p>
         <h1 style="color: #4CAF50; font-size: 32px;">{{.Code}}</h1>
         <p>验证码有效期为 5 分钟，请勿泄露给他人。</p>
         <p>如果这不是您的操作，请忽略此邮件。</p>
       </div>
   login:
-    subject: "AuraDraw 登录验证码"
+    subject: "CoverDesigner 登录验证码"
     body: |
       <div style="font-family: Arial, sans-serif; padding: 20px;">
         <h2>登录验证</h2>
-        <p>您正在登录 AuraDraw，您的验证码是：</p>
+        <p>您正在登录 CoverDesigner，您的验证码是：</p>
         <h1 style="color: #2196F3; font-size: 32px;">{{.Code}}</h1>
         <p>验证码有效期为 5 分钟。</p>
       </div>
   reset_password:
-    subject: "AuraDraw 密码重置"
+    subject: "CoverDesigner 密码重置"
     body: |
       <div style="font-family: Arial, sans-serif; padding: 20px;">
         <h2>重置密码</h2>

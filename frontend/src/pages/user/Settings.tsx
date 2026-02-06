@@ -48,6 +48,52 @@ export default function Settings() {
     }
   }, [activeTab]);
 
+  // ----- Order statistics (for orders tab) -----
+  const totalOrders = orders.length;
+  const paidStats = orders.reduce(
+    (acc, order) => {
+      if (order.status === 'paid') {
+        acc.count += 1;
+        acc.amount += order.amount || 0;
+      }
+      return acc;
+    },
+    { count: 0, amount: 0 }
+  );
+
+  const cancelledStats = orders.reduce(
+    (acc, order) => {
+      if (order.status === 'cancelled' || order.status === 'canceled') {
+        acc.count += 1;
+        acc.amount += order.amount || 0;
+      }
+      return acc;
+    },
+    { count: 0, amount: 0 }
+  );
+
+  const pendingStats = orders.reduce(
+    (acc, order) => {
+      if (order.status === 'pending') {
+        acc.count += 1;
+        acc.amount += order.amount || 0;
+      }
+      return acc;
+    },
+    { count: 0, amount: 0 }
+  );
+
+  // Credits stats based on paid orders and current balance
+  const totalPaidCredits = orders.reduce((sum, order) => {
+    if (order.status === 'paid') {
+      return sum + (order.credits || 0);
+    }
+    return sum;
+  }, 0);
+
+  const remainingCredits = user?.balance ?? 0;
+  const consumedCredits = Math.max(totalPaidCredits - remainingCredits, 0);
+
   const handleCancelOrder = async (orderId: string) => {
     if (!confirm('Are you sure you want to cancel this order?')) return;
     try {
@@ -286,8 +332,28 @@ export default function Settings() {
                <div>
                  <h3 className="text-lg font-medium">Order History</h3>
                  <p className="text-sm text-muted-foreground">
-                   View your past transactions and orders.
+                  View your past transactions and orders.
                  </p>
+                 {orders.length > 0 && (
+                   <div className="mt-2 text-xs text-muted-foreground space-y-1">
+                     <p>
+                       共 <span className="font-semibold text-foreground">{totalOrders}</span> 笔订单。
+                     </p>
+                     <p>
+                       购买成功：<span className="font-semibold text-emerald-600">{paidStats.count}</span> 笔，
+                       金额合计 <span className="font-semibold text-emerald-600">{formatCurrency(paidStats.amount)}</span>；
+                       待支付：<span className="font-semibold">{pendingStats.count}</span> 笔，
+                       金额合计 <span className="font-semibold">{formatCurrency(pendingStats.amount)}</span>；
+                       已取消：<span className="font-semibold text-red-500">{cancelledStats.count}</span> 笔，
+                       金额合计 <span className="font-semibold text-red-500">{formatCurrency(cancelledStats.amount)}</span>。
+                      </p>
+                      <p>
+                        Credits 统计：总购买 <span className="font-semibold text-foreground">{totalPaidCredits}</span>，
+                        已消费 <span className="font-semibold text-amber-600">{consumedCredits}</span>，
+                        当前剩余 <span className="font-semibold text-emerald-600">{remainingCredits}</span>。
+                     </p>
+                   </div>
+                 )}
                </div>
                <div className="border-t" />
                

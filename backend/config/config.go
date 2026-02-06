@@ -53,6 +53,9 @@ type Config struct {
 	AlipayGateway      string `mapstructure:"ALIPAY_GATEWAY"`
 	AlipayIsProduction bool   `mapstructure:"ALIPAY_IS_PRODUCTION"`
 
+	// Gemini Configs
+	GeminiAPIKey string `mapstructure:"GEMINI_API_KEY"`
+
 	// Products
 	Products map[int]ProductConfig
 }
@@ -111,6 +114,9 @@ func LoadConfig() {
 	viper.SetDefault("ALIPAY_RETURN_URL", "http://localhost:5173/payment/success")
 	viper.SetDefault("ALIPAY_GATEWAY", "")
 	viper.SetDefault("ALIPAY_IS_PRODUCTION", true)
+
+	// Gemini Defaults
+	viper.SetDefault("GEMINI_API_KEY", "")
 
 	// Read from env file
 	if err := viper.ReadInConfig(); err != nil {

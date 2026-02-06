@@ -16,7 +16,10 @@ func SetupRouter() *gin.Engine {
 	// Init Controllers
 	authCtrl := controllers.AuthController{}
 	userCtrl := controllers.UserController{}
-	posterCtrl := controllers.PosterController{}
+	posterService, _ := services.NewPosterService() // Error ignored - service will use mock generation if Gemini not configured
+	posterCtrl := controllers.PosterController{
+		Service: posterService,
+	}
 	payCtrl := controllers.PaymentController{
 		Service: services.NewPaymentService(),
 	}
@@ -53,6 +56,7 @@ func SetupRouter() *gin.Engine {
 			// Poster
 			protected.POST("/posters/generate", posterCtrl.Generate)
 			protected.GET("/posters", posterCtrl.List)
+			protected.GET("/posters/history", posterCtrl.GetAllHistory)
 			protected.GET("/posters/:id", posterCtrl.GetDetail)
 
 			// Payment

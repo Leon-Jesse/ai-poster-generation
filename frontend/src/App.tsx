@@ -5,6 +5,8 @@ import Pricing from "@/pages/Pricing"
 import PaymentSuccess from "@/pages/PaymentSuccess"
 import Settings from "@/pages/user/Settings"
 import Placeholder from "@/pages/Placeholder"
+import Workspace from "@/pages/Workspace"
+import Gallery from "@/pages/Gallery"
 import Login from "@/pages/auth/Login"
 import Register from "@/pages/auth/Register"
 import ResetPassword from "@/pages/auth/ResetPassword"
@@ -32,11 +34,11 @@ const router = createBrowserRouter([
       },
       {
         path: "workspace",
-        element: <Placeholder title="Workspace" description="The creative workspace is currently being built." />,
+        element: <Workspace />,
       },
       {
         path: "gallery",
-        element: <Placeholder title="Gallery" description="Browse community creations soon." />,
+        element: <Gallery />,
       },
       {
         path: "pricing",

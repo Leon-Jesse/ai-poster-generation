@@ -26,10 +26,19 @@ dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+
+# Environment variables and secrets (CRITICAL: Never commit these!)
+.env
+.env.*
+!.env.example
+*.env
+*.env.local
+*.env.development
+*.env.development.local
+*.env.test
+*.env.test.local
+*.env.production
+*.env.production.local
 
 # OS X
 .DS_Store
@@ -41,15 +50,29 @@ yarn-error.log*
 backend/build/
 backend/config.yaml
 backend/auradraw-backend.tar.gz
+# Explicitly ignore backend .env files
+backend/.env
+backend/.env.*
 
 # frontend
 frontend/dist/
 frontend/dist.tar.gz
+# Explicitly ignore frontend .env files
+frontend/.env
+frontend/.env.*
 
 # doc
 doc/account.md
 
+# Database and secrets
 mysql/
-.env
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+credentials/
+
+# Build artifacts
 build_dist/
 build/

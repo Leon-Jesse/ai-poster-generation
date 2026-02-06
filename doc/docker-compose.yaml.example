@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  mysql8:
+    image: mysql:8.0
+    container_name: local-mysql8
+    ports:
+      - "3306:3306"
+    environment:
+      # ⚠️ 请设置环境变量 MYSQL_ROOT_PASSWORD，不要使用默认值
+      # 方式1：在命令行设置
+      #   MYSQL_ROOT_PASSWORD=your_password docker-compose up -d
+      # 方式2：创建 .env 文件（不要提交到 Git）
+      #   echo "MYSQL_ROOT_PASSWORD=your_password" > .env
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme_in_production}
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    command:
+      --default-authentication-plugin=mysql_native_password
+      --slow_query_log=1
+      --slow_query_log_file=/var/lib/mysql/slow_query.log
+      --long_query_time=2
